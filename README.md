@@ -30,4 +30,13 @@
     docker compose up --build -d
     ```
 
+5. **Set up connection to spark**
+- connection_id: spark_default
+- type: spark
+- host: spark://spark-master:7077
+- extra json:
+{
+    ... ,
+    "master": "spark://spark-master:7077" 
+}
 -----

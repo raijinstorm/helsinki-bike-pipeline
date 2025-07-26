@@ -214,4 +214,5 @@ testing_data
 initial_data
 data/
 
+airflow/dags/test_sparl_connection.py
 

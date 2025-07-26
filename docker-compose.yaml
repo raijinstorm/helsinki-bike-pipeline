@@ -62,6 +62,48 @@ services:
       - ./persisted-data:/persisted-data
       - /var/run/docker.sock:/var/run/docker.sock
 
+  spark-master:
+    # image: bitnami/spark:3.5.1
+    build: ./spark_image
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - "7077:7077"   # Spark driver port
+      - "8081:8080"   # Spark Master web UI
+    volumes:
+      - spark-events:/opt/spark/events
+      - ${AIRFLOW_PROJ_DIR:-.}/data:/opt/airflow/data
+
+  spark-worker:
+    # image: bitnami/spark:3.5.1
+    build: ./spark_image
+    container_name: spark-worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    depends_on:
+      - spark-master
+    volumes:
+      - spark-events:/opt/spark/events
+      - ${AIRFLOW_PROJ_DIR:-.}/data:/opt/airflow/data
+    user: "${AIRFLOW_UID:-50000}:0"
+
+  spark-history:
+    image: rangareddy1988/spark-history-server:latest
+    container_name: spark-history
+    ports:
+      - "18080:18080"  # History Server UI
+    depends_on:
+      - spark-master
+    volumes:
+      - spark-events:/opt/spark/events
+    user: "${AIRFLOW_UID:-50000}:0"
+
+
   postgres:
     image: postgres:13
     environment:
@@ -238,3 +280,4 @@ services:
 
 volumes:
   postgres-db-volume:
+  spark-events:
